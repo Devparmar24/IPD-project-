@@ -1,3 +1,4 @@
+#this is for the Agricultural_knowledge database that is it takes the data from the Crop_recommendation.csv and puts it into the database
 import sqlite3
 import csv
 import logging

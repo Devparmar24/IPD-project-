@@ -1,3 +1,4 @@
+#This for the farm telementry db 
 from sqlalchemy import create_engine, Column, Integer, Float, DateTime
 from sqlalchemy.orm import declarative_base, sessionmaker
 from datetime import datetime
