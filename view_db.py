@@ -1,6 +1,9 @@
 import sqlite3
+from pathlib import Path
 
-def inspect_database(db_path="agricultural_knowledge.db"):
+DATABASE_DIR = Path(__file__).resolve().parent / "Databases"
+
+def inspect_database(db_path=DATABASE_DIR / "agricultural_knowledge.db"):
     print(f"--- Inspecting {db_path} ---")
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
@@ -31,5 +34,5 @@ def inspect_database(db_path="agricultural_knowledge.db"):
     conn.close()
 
 if __name__ == "__main__":
-    inspect_database("agricultural_knowledge.db")
-    inspect_database("farm_telemetry.db")
+    inspect_database(DATABASE_DIR / "agricultural_knowledge.db")
+    inspect_database(DATABASE_DIR / "farm_telemetry.db")

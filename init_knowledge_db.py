@@ -3,29 +3,54 @@ import sqlite3
 import csv
 import logging
 import zipfile
-import os
+import shutil
+from pathlib import Path
+from pathlib import PurePosixPath
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def ingest_archived_csv_to_knowledge_db(archive_path="archive.zip", csv_filename="Crop_recommendation.csv"):
-    db_name = "agricultural_knowledge.db"
-    
-    # Step 1: Extract the CSV from the archive if it hasn't been extracted yet
-    if os.path.exists(archive_path):
-        logging.info(f"Extracting {csv_filename} from {archive_path}...")
+PROJECT_DIR = Path(__file__).resolve().parent
+ARCHIVE_DIR = PROJECT_DIR / "archive"
+
+
+def ingest_archived_csv_to_knowledge_db(
+    archive_path=ARCHIVE_DIR / "archive.zip",
+    csv_filename=ARCHIVE_DIR / "Crop_recommendation.csv",
+):
+    archive_path = Path(archive_path)
+    csv_path = Path(csv_filename)
+    db_path = PROJECT_DIR / "Databases" / "agricultural_knowledge.db"
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Use the standalone CSV when present; otherwise extract it from the ZIP.
+    if not csv_path.exists() and archive_path.exists():
+        logging.info(f"Extracting {csv_path.name} from {archive_path}...")
         try:
-            with zipfile.ZipFile(archive_path, 'r') as zf:
-                zf.extract(csv_filename, path=".")
+            with zipfile.ZipFile(archive_path, "r") as zf:
+                member = next(
+                    (
+                        name
+                        for name in zf.namelist()
+                        if PurePosixPath(name).name == csv_path.name
+                    ),
+                    None,
+                )
+                if member is None:
+                    logging.error(f"'{csv_path.name}' was not found inside '{archive_path}'")
+                    return
+                with zf.open(member) as source, csv_path.open("wb") as target:
+                    shutil.copyfileobj(source, target)
             logging.info("Extraction complete.")
         except Exception as e:
             logging.error(f"Failed to extract from archive: {e}")
             return
-    elif not os.path.exists(csv_filename):
-        logging.error(f"Archive '{archive_path}' and standalone file '{csv_filename}' both not found in E:\\Dev\\IPD Project\\")
+
+    if not csv_path.exists():
+        logging.error(f"CSV file not found: '{csv_path}'")
         return
 
     # Step 2: Connect to SQLite and ingest the CSV data
-    conn = sqlite3.connect(db_name)
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
     cursor.execute('''
@@ -45,7 +70,7 @@ def ingest_archived_csv_to_knowledge_db(archive_path="archive.zip", csv_filename
     crop_stats = {}
 
     try:
-        with open(csv_filename, mode='r', encoding='utf-8') as file:
+        with csv_path.open(mode='r', encoding='utf-8') as file:
             reader = csv.DictReader(file)
             for row in reader:
                 crop = row['label'].title()
@@ -78,11 +103,10 @@ def ingest_archived_csv_to_knowledge_db(archive_path="archive.zip", csv_filename
 
         conn.commit()
         conn.close()
-        logging.info(f"Successfully processed '{csv_filename}' and updated '{db_name}'!")
+        logging.info(f"Successfully processed '{csv_path}' and updated '{db_path}'!")
 
     except Exception as e:
         logging.error(f"An error occurred while parsing the CSV: {e}")
 
 if __name__ == "__main__":
-    # Change "archive.zip" if your zip file has a different name (e.g., "archive (1).zip")
-    ingest_archived_csv_to_knowledge_db(archive_path="archive.zip", csv_filename="Crop_recommendation.csv")
+    ingest_archived_csv_to_knowledge_db()

@@ -1,6 +1,10 @@
+#adds a sample reading to the farm_telemetry.db for demo purposes
 import sqlite3
+from pathlib import Path
 
-conn = sqlite3.connect("farm_telemetry.db")
+database_path = Path(__file__).resolve().parent / "Databases" / "farm_telemetry.db"
+database_path.parent.mkdir(parents=True, exist_ok=True)
+conn = sqlite3.connect(database_path)
 cursor = conn.cursor()
 
 # Ensure the table exists even if mqtt_ingest.py hasn't run yet

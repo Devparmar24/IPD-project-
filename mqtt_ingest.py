@@ -1,6 +1,6 @@
 import paho.mqtt.client as mqtt
 import json
-from database import Session, FieldTelemetry
+from farmtelementary_database import Session, FieldTelemetry
 
 MQTT_BROKER = "broker.emqx.io"
 MQTT_TOPIC = "farm/field_1/sensors"

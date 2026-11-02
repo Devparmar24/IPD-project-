@@ -1,7 +1,9 @@
 #This for the farm telementry db 
 from sqlalchemy import create_engine, Column, Integer, Float, DateTime
+from sqlalchemy.engine import URL
 from sqlalchemy.orm import declarative_base, sessionmaker
 from datetime import datetime
+from pathlib import Path
 
 # Initialize the SQLAlchemy Base
 Base = declarative_base()
@@ -25,8 +27,10 @@ class FieldTelemetry(Base):
     soil_ph = Column(Float, nullable=True)
 
 
-# Create the SQLite database file in your project directory
-engine = create_engine('sqlite:///farm_telemetry.db')
+# Keep the database path independent of the current working directory.
+DATABASE_PATH = Path(__file__).resolve().parent / "Databases" / "farm_telemetry.db"
+DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
+engine = create_engine(URL.create("sqlite", database=str(DATABASE_PATH)))
 
 # Generate the table schema
 Base.metadata.create_all(engine)

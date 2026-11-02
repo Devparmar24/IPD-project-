@@ -2,11 +2,16 @@ import sqlite3
 import requests
 import logging
 from datetime import datetime, timedelta
+from pathlib import Path
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class CropRecommendationEngine:
-    def __init__(self, db_path="farm_telemetry.db", city_name="Vasai"):
+    def __init__(
+        self,
+        db_path=Path(__file__).resolve().parent / "Databases" / "farm_telemetry.db",
+        city_name="Vasai",
+    ):
         self.db_path = db_path
         self.city_name = city_name
         # The engine will fetch exact coordinates for this city dynamically
